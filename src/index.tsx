@@ -3,10 +3,8 @@ import { render } from 'react-dom'
 import Lottery from './Lottery'
 
 function App() {
-  const [text, updateText] = React.useState('')
-
   return (
-    <section style={{ margin: 20 }}>
+    <section>
       <Lottery />
     </section>
   )

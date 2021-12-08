@@ -2,7 +2,7 @@ import { Subject, of, combineLatest, from } from 'rxjs'
 import { switchMap, timeout, catchError, take, share, startWith } from 'rxjs/operators'
 import { ObservableResource } from 'observable-hooks'
 
-type LotteryResult = {
+export type LotteryResult = {
   giftId: number
 }
 

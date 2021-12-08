@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import { fakeLotteryFetch } from '../services/fake-api'
-import { merge, from } from 'rxjs'
-import createTween from './rxjs-create-tween'
+import { fakeLotteryFetch, LotteryResult } from '../services/fake-api'
+import { merge, reduce, from, map } from 'rxjs'
+import createTween, { ITweenProcess } from './rxjs-create-tween'
 import styles from './index.module.scss'
 import cx from 'classnames'
 /**
@@ -19,14 +19,19 @@ export default function Lottery() {
     const result$$ = from(fakeLotteryFetch(query))
     const [tween$$, tween] = createTween()
     // 动画与抽奖合并
-    const lottery$$ = merge(result$$, tween$$)
-    lottery$$.subscribe(next => {
-      if (typeof next !== 'number') {
-        tween?.to({ x: 8 * 2 + next?.giftId || 0 - 1 }, 3000)
+    merge(result$$, tween$$).pipe(reduce((acc, one) => {
+      if ((one as ITweenProcess).idx !== undefined) {
+        const { idx, isLastRound } = one as ITweenProcess
+        if (isLastRound && acc.giftId === idx) {
+          tween?.stop()
+        } else {
+          setAnimateIndex(idx)
+        }
+        return { ...acc, ...one }
       } else {
-        setAnimateIndex(next)
+        return { ...acc, giftId: (one as LotteryResult).giftId }
       }
-    })
+    }, { giftId: -1, idx: 0, isLastRound: false })).subscribe()
   }
 
   return (
@@ -42,11 +47,11 @@ export default function Lottery() {
         <button onClick={doLottery}>抽奖</button>
       </header>
 
-      <div>{animateIndex}</div>
+      <div>{animateIndex + 1}</div>
       <div className={styles.content}>
-        {Array.from({ length: 9 }, (i, idx) => idx + 1).map((item, i) => (
+        {Array.from({ length: 9 }, (i, idx) => idx).map((item, i) => (
           <div key={i} className={cx(styles.item, item === animateIndex && styles['is--active'])}>
-            {item}
+            {item + 1}
           </div>
         ))}
       </div>
